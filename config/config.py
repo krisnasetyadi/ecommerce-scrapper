@@ -1,0 +1,5 @@
+BASE_URL = 'https://www.lazada.com.my'
+KEYWORD_CATEGORY = 'shop-mobiles-tablets/'
+PAGE=1
+BASE_SEARCH_URL_PARAMETER = f'{BASE_URL}/{KEYWORD_CATEGORY}/?page={PAGE}'
+PROXY_SERVER = '182.253.21.26:46977'
