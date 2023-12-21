@@ -30,8 +30,8 @@ def eCommerceScrapper(urls = []):
     services = Service('chromedriver.exe')
     chrome_options.add_argument(f'user-agent={ua.random}')
     chrome_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36')
-    # chrome_options.add_argument(f'--proxy-server=http://{proxy.http_proxy}')
-    # chrome_options.add_argument(f'--proxy-server=https://{proxy.ssl_proxy}')
+    chrome_options.add_argument(f'--proxy-server=http://{proxy.http_proxy}')
+    chrome_options.add_argument(f'--proxy-server=https://{proxy.ssl_proxy}')
     print_message(f'http: {proxy.http_proxy}, ssl: {proxy.ssl_proxy}', 'info', True)
 
     print_message('argument added', 'info')

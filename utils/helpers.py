@@ -204,3 +204,4 @@ def storingLoggingAs(status='', text='', additional_text=''):
     # console_handler = logging.StreamHandler()
     # console_handler.setFormatter(formatter)
     # l  logging.getLogger().addHandler(handler)
+    

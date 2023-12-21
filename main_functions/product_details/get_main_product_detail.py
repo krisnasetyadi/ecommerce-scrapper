@@ -60,11 +60,8 @@ def getProductDetail(driver, cart_list_item):
     #__CUSTOMER REVIEW SECTION
     scroll_height2 = 1000
     driver.execute_script(f"window.scrollBy(0, {scroll_height2});")
-    [scrolled] = scrollFromToptoBottom(driver, 'css-a21zsk', False, True, 10)
-    tab_list_review = driver.find_element('li', class_='prod-rev-tab')
-    review_anchor = tab_list_review.find_element('a')
-
-    review_anchor.click()
+    [scrolled] = scrollFromToptoBottom(driver, 'footer-first', False, True, 10)
+    storingLoggingAs('info', f'scrolled to footer done {scrolled}')
     REVIEW_DETAIL = getReviewDetail(driver)
     # UPDATE-REVIEW_DETAIL-SECTION #
     storingLoggingAs('info', 'review detail collected')
