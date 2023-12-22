@@ -4,12 +4,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
-import math
 
 # import custom helper functions
 from utils.helpers import print_message, flattenCustomerReviews, scrollFromToptoBottom, storingLoggingAs
-from get_review_detail import getReviewDetail
-from get_seller_detail import getSellerDetail
+from main_functions.product_details.get_review_detail import getReviewDetail
+from main_functions.product_details.get_seller_detail import getSellerDetail
 
 def getProductDetail(driver, cart_list_item):
     detail_content = driver.page_source
@@ -34,7 +33,7 @@ def getProductDetail(driver, cart_list_item):
         'product_category_name': product_category_name,
         'product_original_price': product_original_price if product_original_price else '',
         'product_price': product_price,
-        'product_sold_quantity': cart_list_item.quantity if cart_list_item.quantity else ''
+        'product_sold_quantity': cart_list_item['quantity'] if cart_list_item['quantity'] else ''
     }
 
     print('product_detail', product_detail)
@@ -60,7 +59,8 @@ def getProductDetail(driver, cart_list_item):
     #__CUSTOMER REVIEW SECTION
     scroll_height2 = 1000
     driver.execute_script(f"window.scrollBy(0, {scroll_height2});")
-    [scrolled] = scrollFromToptoBottom(driver, 'footer-first', False, True, 10)
+    time.sleep(10)
+    [scrolled] = scrollFromToptoBottom(driver, 'b7FXJ', False, True, 10)
     storingLoggingAs('info', f'scrolled to footer done {scrolled}')
     REVIEW_DETAIL = getReviewDetail(driver)
     # UPDATE-REVIEW_DETAIL-SECTION #

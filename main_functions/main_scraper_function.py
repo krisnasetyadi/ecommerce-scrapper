@@ -15,7 +15,6 @@ from bs4 import BeautifulSoup
 from utils.helpers import print_message, scrollFromToptoBottom, getProductCardListDetail, storingLoggingAs, saveDataToCSV
 from utils.product_list_helpers import openNewTabWindow
 from config.config import BASE_SEARCH_URL_PARAMETER, PROXY_SERVER, KEYWORD_CATEGORY
-from main_functions.product_details.get_main_product_detail import getProductDetail
 
 MAX_RETRY = 10
 
@@ -44,10 +43,6 @@ def eCommerceScrapper(urls = []):
     list_content_soup = BeautifulSoup(content, 'html.parser')
     find_error_el = list_content_soup.find('body', class_='neterror')
 
-    current_datetime = datetime.now()
-    formatted_timestamp = current_datetime.strftime("%Y%m%d%H%M%S")
-
-    print('formatted_timestamp', formatted_timestamp)
     LIST_OF_PRODUCT = []
     if find_error_el is None:
         try:
@@ -55,16 +50,19 @@ def eCommerceScrapper(urls = []):
             print('running without driver error. Start scrolling to footer')
             [scrolled] = scrollFromToptoBottom(driver, 'footer-first', False, True, 10)
             print('scrolled to bottom:', scrolled)
-            wait = WebDriverWait(driver, 120)
+            # wait = WebDriverWait(driver, 120)
 
-            # container class Ms6aG
+            # # container class Ms6aG
             
-            wait.until(EC.presence_of_element_located((By.XPATH, '//div[@class="Ms6aG"]')))
-            print('waiting for presence of element done')
+            # wait.until(EC.presence_of_element_located((By.XPATH, '//div[@class="Ms6aG"]')))
+            # print('waiting for presence of element done')
             
-            all_item_each_page = driver.find_elements(By.XPATH, '//div[@class="Ms6aG"]')
-            total_item_per_page = len(all_item_each_page)
+            # all_item_each_page = driver.find_elements(By.XPATH, '//div[@class="Ms6aG MefHh"]')
+            # total_item_per_page = len(all_item_each_page)
 
+            item_each_page = driver.find_elements(By.XPATH, '//div[@class="Bm3ON"]')
+            total_item_per_page = len(item_each_page)
+            print('total_item_per_page2',total_item_per_page)
             item_counter_page = 0
             product_card_list_detail = getProductCardListDetail(driver)
             print('total_item_per_page', total_item_per_page)
@@ -73,7 +71,7 @@ def eCommerceScrapper(urls = []):
             if len(product_card_list_detail) == total_item_per_page:
                 for card_list_item_index, card_list_item in enumerate(product_card_list_detail):
                         time.sleep(10)
-                        print(f'card_list_item_index {card_list_item_index}. {card_list_item.url}')
+                        print(f'card_list_item_index {card_list_item_index}--{card_list_item["url"]}')
                         storingLoggingAs('info', f'processing {card_list_item_index} of {len(product_card_list_detail)} url. opening new tab...')
                     
                         openNewTabWindow(driver, card_list_item, LIST_OF_PRODUCT, KEYWORD_CATEGORY)
@@ -82,8 +80,8 @@ def eCommerceScrapper(urls = []):
 
                 if len(LIST_OF_PRODUCT) > 0:
                     saveDataToCSV(LIST_OF_PRODUCT, KEYWORD_CATEGORY, 'success')
-                    
         except WebDriverException as e:
+            print('WebDriverException', e)
             if "ERR_HTTP2_PROTOCOL_ERROR" in str(e):
                 print_message(f'Encountered ERR_HTTP2_PROTOCOL_ERROR: {e}', 'error', True)
                 if len(LIST_OF_PRODUCT) > 0:
