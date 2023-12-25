@@ -7,7 +7,7 @@ import time
 
 def openNewTabWindow(driver, product_card_item, listOfProduct, keyword):
     #open blank tab
-    driver.execute("window.open('', '_blank');")
+    driver.execute_script("window.open('', '_blank');")
     driver.switch_to.window(driver.window_handles[-1])
     storingLoggingAs('info', f'opening url: {product_card_item["url"]}')
     driver.get(product_card_item["url"])
