@@ -1,14 +1,13 @@
-import time
-import pandas as pd
-from datetime import datetime
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException, WebDriverException
+from selenium.common.exceptions import  WebDriverException
 from selenium.webdriver.common.proxy import Proxy, ProxyType
-from selenium.webdriver.common.action_chains import ActionChains
+
+import time
+import undetected_chromedriver as uc
+
 from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
 # F U N C T I O N S
@@ -25,20 +24,19 @@ def eCommerceScrapper(urls = []):
     proxy.http_proxy = PROXY_SERVER
     proxy.ssl_proxy = PROXY_SERVER
     ua = UserAgent()
-    chrome_options = webdriver.ChromeOptions()
-    services = Service('chromedriver.exe')
-    chrome_options.add_argument(f'user-agent={ua.random}')
-    chrome_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36')
-    chrome_options.add_argument(f'--proxy-server=http://{proxy.http_proxy}')
-    chrome_options.add_argument(f'--proxy-server=https://{proxy.ssl_proxy}')
+    # services = Service('chromedriver.exe')
+    uc_chrome_options = uc.ChromeOptions()
+    uc_chrome_options.add_argument(f'user-agent={ua.random}')
+    # chrome_options.add_argument(f'--proxy-server=http://{proxy.http_proxy}')
+    # chrome_options.add_argument(f'--proxy-server=https://{proxy.ssl_proxy}')
     print_message(f'http: {proxy.http_proxy}, ssl: {proxy.ssl_proxy}', 'info', True)
 
-    print_message('argument added', 'info')
     time.sleep(10)
-    driver = webdriver.Chrome(service=services, options=chrome_options)
+    driver = uc.Chrome(options=uc_chrome_options, use_subprocess=False)
     print_message(f'setting up driver . . .', 'info')
-
+    
     driver.get(BASE_SEARCH_URL_PARAMETER)
+    time.sleep(20)
     content = driver.page_source
     list_content_soup = BeautifulSoup(content, 'html.parser')
     find_error_el = list_content_soup.find('body', class_='neterror')
@@ -46,35 +44,26 @@ def eCommerceScrapper(urls = []):
     LIST_OF_PRODUCT = []
     if find_error_el is None:
         try:
-            time.sleep(60)
+            time.sleep(30)
             print('running without driver error. Start scrolling to footer')
-            [scrolled] = scrollFromToptoBottom(driver, 'footer-first', False, True, 10)
+            [scrolled] = scrollFromToptoBottom(driver, 'footer-first', False, False, 10)
             print('scrolled to bottom:', scrolled)
-            # wait = WebDriverWait(driver, 120)
-
-            # # container class Ms6aG
-            
-            # wait.until(EC.presence_of_element_located((By.XPATH, '//div[@class="Ms6aG"]')))
-            # print('waiting for presence of element done')
-            
-            # all_item_each_page = driver.find_elements(By.XPATH, '//div[@class="Ms6aG MefHh"]')
-            # total_item_per_page = len(all_item_each_page)
 
             item_each_page = driver.find_elements(By.XPATH, '//div[@class="Bm3ON"]')
             total_item_per_page = len(item_each_page)
-            print('total_item_per_page2',total_item_per_page)
+            
             item_counter_page = 0
             product_card_list_detail = getProductCardListDetail(driver)
-            print('total_item_per_page', total_item_per_page)
+           
             print('TOTAL URL HAS SAME LENGTH', f'URL: {len(product_card_list_detail)}', f'TOTAL ITEM: {total_item_per_page}' )
             storingLoggingAs('info', f'TOTAL URL HAS SAME LENGTH __ URL: {len(product_card_list_detail)}, __ TOTAL ITEM: {total_item_per_page}')
             if len(product_card_list_detail) == total_item_per_page:
-                for card_list_item_index, card_list_item in enumerate(product_card_list_detail):
+                for product_card_index, product_card_item in enumerate(product_card_list_detail):
                         time.sleep(10)
-                        print(f'card_list_item_index {card_list_item_index}--{card_list_item["url"]}')
-                        storingLoggingAs('info', f'processing {card_list_item_index} of {len(product_card_list_detail)} url. opening new tab...')
+                        print(f'product_card_index {product_card_index}--{product_card_item["url"]}')
+                        storingLoggingAs('info', f'processing {product_card_index} of {len(product_card_list_detail)} url. opening new tab...')
                     
-                        openNewTabWindow(driver, card_list_item, LIST_OF_PRODUCT, KEYWORD_CATEGORY)
+                        openNewTabWindow(driver, product_card_item, LIST_OF_PRODUCT, KEYWORD_CATEGORY)
                         item_counter_page += 1
                         time.sleep(10)   
 

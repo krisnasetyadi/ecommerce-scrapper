@@ -1,18 +1,18 @@
-import logging
-from logging.handlers import TimedRotatingFileHandler
-import pandas as pd
-import time 
-import os
-
-from bs4 import BeautifulSoup
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
+
+from logging.handlers import TimedRotatingFileHandler
+from bs4 import BeautifulSoup
 from datetime import datetime
+import pandas as pd
+import logging
+import time 
+import sys
+import os
 
 from urllib.parse import unquote, urlparse, parse_qs
-
 
 def print_message(text, color, bold=False):
     color_code = ''
@@ -41,13 +41,8 @@ def scrollFromToptoBottom(dvr, boundary_component, byId=False, no_scroll_top=Fal
     print_message(f'scrolling . . . {boundary_component}', 'info')
 
     while not scrolled and scroll_count < timeout_scroll and not max_scrolled: 
-        current_scroll_position = dvr.execute_script("return window.pageYOffset;")
-        document_height = dvr.execute_script("return document.documentElement.scrollHeight;")
-        print('current_scroll_position', current_scroll_position)
-        print('document_height', document_height)
         try:
-            # boundary_element = dvr.find_element(by=By.CLASS_NAME, value=f'{boundary_component}') if not byId else dvr.find_element(by=By.ID, value=f'{boundary_component}')  
-            # print('boundary_element', boundary_element)
+            
             if timeout_scroll == scroll_count:
                 max_scrolled = True
             else:
@@ -79,6 +74,47 @@ def scrollFromToptoBottom(dvr, boundary_component, byId=False, no_scroll_top=Fal
     else:
         return [False]
     
+
+def scrollFromToptoBottomWithBoundary(dvr, boundary_component, byId=False, no_scroll_top=False, sleepTime = 5):
+    scrolled = False
+    timeout_scroll = 15
+    scroll_count = 0
+    is_boundary_component = False
+    
+    print_message(f'scrolling . . . {boundary_component}', 'info')
+
+    while not scrolled and scroll_count < timeout_scroll and not is_boundary_component: 
+        current_scroll_position = dvr.execute_script("return window.pageYOffset;")
+        document_height = dvr.execute_script("return document.documentElement.scrollHeight;")
+        print('current_scroll_position', current_scroll_position)
+        print('document_height', document_height)
+        try:
+            boundary_element = dvr.find_element(by=By.CLASS_NAME, value=f'{boundary_component}') if not byId else dvr.find_element(by=By.ID, value=f'{boundary_component}')  
+            if boundary_element:
+                scrolled = True
+                is_boundary_component = True
+        except NoSuchElementException:
+            scrolled = False
+            is_boundary_component = False
+            scroll_height = 500
+            dvr.execute_script(f"window.scrollBy(0, {scroll_height});")
+            scroll_count += 1
+            print('scroll__with_boundary_count', scroll_count)
+            time.sleep(sleepTime)
+        
+    if no_scroll_top == False:
+        if scroll_count == timeout_scroll or is_boundary_component:
+            print('get_this_func_1_boundary')
+            dvr.execute_script("window.scrollTo(0, 0);")
+            return [True]
+        
+    if no_scroll_top == True:
+        if is_boundary_component or scroll_count == timeout_scroll:
+            print('get_this_func_2_boundary')
+            return [True]
+    else:
+        return [False]
+    
 def findActiveButtons(array, attr):
     for item in array:
         if item is not None:
@@ -86,13 +122,15 @@ def findActiveButtons(array, attr):
                 return item.text
         return None
 
-def flattenCustomerReviews(data, key1='', key2='', key3=''):
+def flattenCustomerReviews(data, key1='', key2='', key3='', key4='', key5=''):
     flattened_data = []
     for item in [data]:
         for review in item[key1]:
             flattened_item = item.copy()
             flattened_item[key2] = review[key2]
             flattened_item[key3] = review[key3]
+            flattened_item[key4] = review[key4]
+            flattened_item[key5] = review[key5]
             del flattened_item[key1]
             flattened_data.append(flattened_item)
     return flattened_data
@@ -115,7 +153,6 @@ def getProductCardListDetail(driver):
     wait = WebDriverWait(driver, 120)
     item_per_page_container = driver.find_elements(By.XPATH, '//div[@class="Bm3ON"]')
     total_item_per_page = len(item_per_page_container)
-   
 
     print('getProductCardListDetail first and econd', f'1 {total_item_per_page}')
     drive_page_source = driver.page_source
@@ -123,18 +160,16 @@ def getProductCardListDetail(driver):
     item_per_page_soup = content_soup.find_all('div', class_='Bm3ON')
     print(f'item_per_page_soup {len(item_per_page_soup)}')
     for item_index in range(int(total_item_per_page)):
-        print(f'processing detail. processing on current index {item_index} of {total_item_per_page}')
+        print(f'processing card list detail. processing on current index {item_index} of {total_item_per_page}')
 
         item_per_page_container = driver.find_elements(By.XPATH, '//div[@class="Bm3ON"]')
         item = item_per_page_container[item_index]
         quantity_container = item_per_page_soup[item_index].find('div', class_="_6uN7R")
         sold_quantity = quantity_container.find('span', class_="_1cEkb").text if quantity_container.find('span', class_="_1cEkb") is not None else ''
-        print('sold_quantity', sold_quantity)
-        time.sleep(5)
+        time.sleep(2)
 
         seller_location = content_soup.find_all('span', class_='oa6ri') 
-      
-        # print('seller_location', seller_location)
+
         wait.until(EC.presence_of_element_located((By.TAG_NAME, 'a')))
         anchor = item.find_element(By.TAG_NAME, 'a')
         href = anchor.get_attribute('href')
@@ -145,10 +180,7 @@ def getProductCardListDetail(driver):
             'quantity': sold_quantity
         }
 
-        # print('formatted_result', formatted_result)
-       
         product_list_detail.append(formatted_result)
-    print('product_list_detail', product_list_detail)
     return product_list_detail
 
 
@@ -169,6 +201,10 @@ def saveDataToCSV(array=[], keyword='', status='', optionalText=''):
         if isArrayOfObject:
             stored_data = array
 
+    current_storing_size = sys.getsizeof(storing)
+    current_array_size = sys.getsizeof(array)
+    storingLoggingAs('warning', f'size_of_array {current_array_size} -- size_of_storing {current_storing_size}')
+  
     if len(stored_data) > 0:
         df = pd.DataFrame(stored_data)
         df.index + 1
@@ -184,7 +220,7 @@ def saveDataToCSV(array=[], keyword='', status='', optionalText=''):
 
         os.makedirs(success_folder, exist_ok=True)
         os.makedirs(each_product_stored_folder, exist_ok=True)
-        os.makedirs(error_folder, 'error')
+        os.makedirs(error_folder, exist_ok=True)
 
         file_path = ''
 
@@ -192,13 +228,13 @@ def saveDataToCSV(array=[], keyword='', status='', optionalText=''):
             file_path = os.path.join(success_folder, f'product_{keyword}_{optionalText}{formatted_date_time}.csv')
         if status == 'failed':
             file_path = os.path.join(error_folder, f'product_{keyword}_{optionalText}{formatted_date_time}.csv')
-        if status == 'success_each_time':
+        if status == 'success_each_item':
             file_path = os.path.join(each_product_stored_folder, f'product_{keyword}_{optionalText}{formatted_date_time}.csv')
         
         df.to_csv(file_path)
 
 
-def storingLoggingAs(status='', text='', additional_text=''):
+def storingLoggingAs(status='', text=''):
     level_logging = {
         'info': logging.INFO,
         'error': logging.ERROR, 
@@ -209,19 +245,23 @@ def storingLoggingAs(status='', text='', additional_text=''):
     os.makedirs(logs_folder, exist_ok=True)
     
     log_file_path = os.path.join(logs_folder, f'scrapper.log')
-    
-    handler = TimedRotatingFileHandler(log_file_path, when='H', interval=3, backupCount=24)
-    handler.setLevel(level_logging[status])
+
+    logger = logging.getLogger('logger') 
+    logger.setLevel(logging.DEBUG)
+
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logging.getLogger().addHandler(handler)
-    logging.log(level_logging[status], f'{additional_text}{text}')
+    
+    file_handler = TimedRotatingFileHandler(log_file_path, when='H', interval=3, backupCount=24)
+    file_handler.setLevel(level_logging[status])
+    file_handler.setFormatter(formatter)
 
-
-
-        
-    #  # logging.basicConfig(filename=log_file_path, level=level_logging[status], format='%(asctime)s - %(levelname)s - %(message)s')
+    # {additional_text}
+    logging.log(level_logging[status], f'{text}')
     # console_handler = logging.StreamHandler()
+    # console_handler.setLevel(level_logging[status])  
     # console_handler.setFormatter(formatter)
-    # l  logging.getLogger().addHandler(handler)
+
+    logger.addHandler(file_handler)
+    # logger.addHandler(console_handler)
+    logger.log(level_logging[status], f'{text}')
     
