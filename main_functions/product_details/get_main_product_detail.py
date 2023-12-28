@@ -9,11 +9,11 @@ from main_functions.product_details.get_review_detail import getReviewDetail
 from main_functions.product_details.get_seller_detail import getSellerDetail
 
 def getProductDetail(driver, product_card_item):
+    time.sleep(20)
+
     detail_content = driver.page_source
     detail_soup = BeautifulSoup(detail_content, 'html.parser')
-    time.sleep(10)
     PRODUCT_DETAIL = {}
-    wait = WebDriverWait(driver, 30)
 
     product_name = detail_soup.find('h1', class_='pdp-mod-product-badge-title').text
     product_category = detail_soup.find('ul', id='J_breadcrumb')
@@ -59,12 +59,12 @@ def getProductDetail(driver, product_card_item):
     driver.execute_script(f"window.scrollBy(0, {scroll_height2});")
     time.sleep(10)
     [scrolled] = scrollFromToptoBottomWithBoundary(driver, 'next-pagination-pages', False, True, 10)
-    storingLoggingAs('info', f'scrolled to footer done {scrolled}')
+    storingLoggingAs('info', f'scrolled to footer done (before get review section) {scrolled}')
 
     REVIEW_DETAIL = getReviewDetail(driver)
 
     # UPDATE-REVIEW_DETAIL-SECTION #
-    storingLoggingAs('info', f'review detail collected, {REVIEW_DETAIL}')
+    storingLoggingAs('info', f'review detail collected')
 
     # print_message(f'REVIEW_DETAIL {REVIEW_DETAIL}', 'info', True)
     print_message(f'PRODUCT_DETAIL_SECTION {PRODUCT_DETAIL}', 'info', True )
@@ -75,6 +75,5 @@ def getProductDetail(driver, product_card_item):
         PRODUCT_DETAIL_RESULT['result'] = flattenCustomerReviews(PRODUCT_DETAIL, 'customer_reviews', 'customer_name', 'customer_review', 'customer_sku', 'customer_rating')
     else:
         PRODUCT_DETAIL.update({'customer_name': '', 'customer_review': '', 'customer_sku': '', 'customer_rating': ''})
-    storingLoggingAs('info', f'PRODUCT_DETAIL_RESULT {PRODUCT_DETAIL_RESULT}')
 
-    return PRODUCT_DETAIL_RESULT['result'] if PRODUCT_DETAIL_RESULT else PRODUCT_DETAIL
+    return PRODUCT_DETAIL_RESULT['result'] if PRODUCT_DETAIL_RESULT else [PRODUCT_DETAIL]

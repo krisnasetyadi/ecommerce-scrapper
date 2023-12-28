@@ -12,7 +12,7 @@ from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
 # F U N C T I O N S
 from utils.helpers import print_message, scrollFromToptoBottom, getProductCardListDetail, storingLoggingAs, saveDataToCSV
-from utils.product_list_helpers import openNewTabWindow
+from utils.product_list_helpers import openNewTabWindow, getTotalPagination
 from config.config import BASE_SEARCH_URL_PARAMETER, PROXY_SERVER, KEYWORD_CATEGORY
 
 MAX_RETRY = 10
@@ -27,6 +27,7 @@ def eCommerceScrapper(urls = []):
     # services = Service('chromedriver.exe')
     uc_chrome_options = uc.ChromeOptions()
     uc_chrome_options.add_argument(f'user-agent={ua.random}')
+    uc_chrome_options.add_argument('--disable-popup-blocking')
     # chrome_options.add_argument(f'--proxy-server=http://{proxy.http_proxy}')
     # chrome_options.add_argument(f'--proxy-server=https://{proxy.ssl_proxy}')
     print_message(f'http: {proxy.http_proxy}, ssl: {proxy.ssl_proxy}', 'info', True)
@@ -44,11 +45,13 @@ def eCommerceScrapper(urls = []):
     LIST_OF_PRODUCT = []
     if find_error_el is None:
         try:
+           
             time.sleep(30)
-            print('running without driver error. Start scrolling to footer')
-            [scrolled] = scrollFromToptoBottom(driver, 'footer-first', False, False, 10)
-            print('scrolled to bottom:', scrolled)
-
+            print('running without driver error. Start scrolling to footer...')
+            [scrolled] = scrollFromToptoBottom(driver, 'footer-first', False, False, 10, 12)
+            
+            get_total_pagination_of_product_list = getTotalPagination(driver)
+            print('scrolled to bottom:', scrolled, 'get_total_pagination_of_product_list', get_total_pagination_of_product_list)
             item_each_page = driver.find_elements(By.XPATH, '//div[@class="Bm3ON"]')
             total_item_per_page = len(item_each_page)
             
@@ -63,9 +66,11 @@ def eCommerceScrapper(urls = []):
                         print(f'product_card_index {product_card_index}--{product_card_item["url"]}')
                         storingLoggingAs('info', f'processing {product_card_index} of {len(product_card_list_detail)} url. opening new tab...')
                     
-                        openNewTabWindow(driver, product_card_item, LIST_OF_PRODUCT, KEYWORD_CATEGORY)
+                        openNewTabWindow(driver, product_card_item, LIST_OF_PRODUCT, KEYWORD_CATEGORY, product_card_index, total_item_per_page)
+                        print('open new tab succesfully executed')
                         item_counter_page += 1
                         time.sleep(10)   
+                        print('done sleep for 10 seconds')
 
                 if len(LIST_OF_PRODUCT) > 0:
                     saveDataToCSV(LIST_OF_PRODUCT, KEYWORD_CATEGORY, 'success')

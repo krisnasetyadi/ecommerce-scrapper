@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 import pandas as pd
 import logging
+import pygame
 import time 
 import sys
 import os
@@ -31,9 +32,9 @@ def print_message(text, color, bold=False):
         return print(f"{color_code}{text}\033[0m")
 
 
-def scrollFromToptoBottom(dvr, boundary_component, byId=False, no_scroll_top=False, sleepTime = 5):
+def scrollFromToptoBottom(dvr, boundary_component, byId=False, no_scroll_top=False, sleepTime = 5, timeout=12):
     scrolled = False
-    timeout_scroll = 12
+    timeout_scroll = timeout
     scroll_count = 0
     is_boundary_component = False
     max_scrolled = False
@@ -47,7 +48,7 @@ def scrollFromToptoBottom(dvr, boundary_component, byId=False, no_scroll_top=Fal
                 max_scrolled = True
             else:
                 scrolled = False
-                scroll_height = 500
+                scroll_height = 400
                 dvr.execute_script(f"window.scrollBy(0, {scroll_height});")
                 scroll_count += 1
                 print('scroll_count_1', scroll_count)
@@ -96,7 +97,7 @@ def scrollFromToptoBottomWithBoundary(dvr, boundary_component, byId=False, no_sc
         except NoSuchElementException:
             scrolled = False
             is_boundary_component = False
-            scroll_height = 500
+            scroll_height = 400
             dvr.execute_script(f"window.scrollBy(0, {scroll_height});")
             scroll_count += 1
             print('scroll__with_boundary_count', scroll_count)
@@ -187,7 +188,7 @@ def getProductCardListDetail(driver):
 def saveDataToCSV(array=[], keyword='', status='', optionalText=''):
     current_date_time = datetime.now()
     formatted_date_time = current_date_time.strftime("%Y%m%d%H%M%S")
-
+    # storingLoggingAs('info', f'array_before_save_to_csv {array}')
     stored_data = []
 
     if len(array) > 0:
@@ -201,16 +202,15 @@ def saveDataToCSV(array=[], keyword='', status='', optionalText=''):
         if isArrayOfObject:
             stored_data = array
 
-    current_storing_size = sys.getsizeof(storing)
+    current_storing_size = sys.getsizeof(stored_data)
     current_array_size = sys.getsizeof(array)
     storingLoggingAs('warning', f'size_of_array {current_array_size} -- size_of_storing {current_storing_size}')
-  
+    # storingLoggingAs('info', f'stored data {stored_data}')
     if len(stored_data) > 0:
         df = pd.DataFrame(stored_data)
         df.index + 1
         df.index.rename('number', inplace=True)
         
-
         store_folder = 'csv_stores'
         os.makedirs(store_folder, exist_ok=True)
 
@@ -232,9 +232,13 @@ def saveDataToCSV(array=[], keyword='', status='', optionalText=''):
             file_path = os.path.join(each_product_stored_folder, f'product_{keyword}_{optionalText}{formatted_date_time}.csv')
         
         df.to_csv(file_path)
+        playSoundWithStatus('success')
 
 
 def storingLoggingAs(status='', text=''):
+    current_date_time = datetime.now()
+    formatted_date_time = current_date_time.strftime("%Y-%m-%d")
+
     level_logging = {
         'info': logging.INFO,
         'error': logging.ERROR, 
@@ -244,24 +248,29 @@ def storingLoggingAs(status='', text=''):
     logs_folder = 'logs'
     os.makedirs(logs_folder, exist_ok=True)
     
-    log_file_path = os.path.join(logs_folder, f'scrapper.log')
+    log_file_path = os.path.join(logs_folder, f'scrapper_{formatted_date_time}.log')
 
     logger = logging.getLogger('logger') 
-    logger.setLevel(logging.DEBUG)
+    if not logger.handlers:
+        logger.setLevel(logging.DEBUG)
 
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    
-    file_handler = TimedRotatingFileHandler(log_file_path, when='H', interval=3, backupCount=24)
-    file_handler.setLevel(level_logging[status])
-    file_handler.setFormatter(formatter)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
-    # {additional_text}
-    logging.log(level_logging[status], f'{text}')
-    # console_handler = logging.StreamHandler()
-    # console_handler.setLevel(level_logging[status])  
-    # console_handler.setFormatter(formatter)
+        file_handler = logging.FileHandler(log_file_path)
+        file_handler.setLevel(level_logging[status])
+        file_handler.setFormatter(formatter)
 
-    logger.addHandler(file_handler)
-    # logger.addHandler(console_handler)
+        logger.addHandler(file_handler)
+
     logger.log(level_logging[status], f'{text}')
     
+    
+def playSoundWithStatus(status='error', times=1):
+    pygame.mixer.init()
+   
+    sound_by_status = pygame.mixer.Sound(f'./sound_asset/{"blinking_bell_loop" if status == "error" else "bells_deep"}.wav')
+   
+    for i in range(times):
+        sound_by_status.play()
+        print(f'sound played in {i} time')
+        pygame.time.wait(int(sound_by_status.get_length() * 1000))
