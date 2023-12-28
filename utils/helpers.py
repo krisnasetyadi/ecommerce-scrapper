@@ -3,7 +3,6 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 
-from logging.handlers import TimedRotatingFileHandler
 from bs4 import BeautifulSoup
 from datetime import datetime
 import pandas as pd
@@ -32,31 +31,18 @@ def print_message(text, color, bold=False):
         return print(f"{color_code}{text}\033[0m")
 
 
-def scrollFromToptoBottom(dvr, boundary_component, byId=False, no_scroll_top=False, sleepTime = 5, timeout=12):
+def scrollFromToptoBottom(dvr, no_scroll_top=False, sleepTime = 5, timeout=12):
     scrolled = False
     timeout_scroll = timeout
     scroll_count = 0
-    is_boundary_component = False
     max_scrolled = False
-    
-    print_message(f'scrolling . . . {boundary_component}', 'info')
 
     while not scrolled and scroll_count < timeout_scroll and not max_scrolled: 
-        try:
-            
-            if timeout_scroll == scroll_count:
-                max_scrolled = True
-            else:
-                scrolled = False
-                scroll_height = 400
-                dvr.execute_script(f"window.scrollBy(0, {scroll_height});")
-                scroll_count += 1
-                print('scroll_count_1', scroll_count)
-                time.sleep(sleepTime)
-        except NoSuchElementException:
+        if timeout_scroll == scroll_count:
+            max_scrolled = True
+        else:
             scrolled = False
-            is_boundary_component = False
-            scroll_height = 500
+            scroll_height = 400
             dvr.execute_script(f"window.scrollBy(0, {scroll_height});")
             scroll_count += 1
             print('scroll_count', scroll_count)
@@ -64,13 +50,11 @@ def scrollFromToptoBottom(dvr, boundary_component, byId=False, no_scroll_top=Fal
         
     if no_scroll_top == False:
         if scroll_count == timeout_scroll or max_scrolled:
-            print('get_this_func_1')
             dvr.execute_script("window.scrollTo(0, 0);")
             return [True]
         
     if no_scroll_top == True:
         if max_scrolled or scroll_count == timeout_scroll:
-            print('get_this_func_2')
             return [True]
     else:
         return [False]
@@ -81,14 +65,12 @@ def scrollFromToptoBottomWithBoundary(dvr, boundary_component, byId=False, no_sc
     timeout_scroll = 15
     scroll_count = 0
     is_boundary_component = False
-    
-    print_message(f'scrolling . . . {boundary_component}', 'info')
 
     while not scrolled and scroll_count < timeout_scroll and not is_boundary_component: 
-        current_scroll_position = dvr.execute_script("return window.pageYOffset;")
-        document_height = dvr.execute_script("return document.documentElement.scrollHeight;")
-        print('current_scroll_position', current_scroll_position)
-        print('document_height', document_height)
+        # current_scroll_position = dvr.execute_script("return window.pageYOffset;")
+        # document_height = dvr.execute_script("return document.documentElement.scrollHeight;")
+        # print('current_scroll_position', current_scroll_position)
+        # print('document_height', document_height)
         try:
             boundary_element = dvr.find_element(by=By.CLASS_NAME, value=f'{boundary_component}') if not byId else dvr.find_element(by=By.ID, value=f'{boundary_component}')  
             if boundary_element:
@@ -105,13 +87,11 @@ def scrollFromToptoBottomWithBoundary(dvr, boundary_component, byId=False, no_sc
         
     if no_scroll_top == False:
         if scroll_count == timeout_scroll or is_boundary_component:
-            print('get_this_func_1_boundary')
             dvr.execute_script("window.scrollTo(0, 0);")
             return [True]
         
     if no_scroll_top == True:
         if is_boundary_component or scroll_count == timeout_scroll:
-            print('get_this_func_2_boundary')
             return [True]
     else:
         return [False]
@@ -135,19 +115,6 @@ def flattenCustomerReviews(data, key1='', key2='', key3='', key4='', key5=''):
             del flattened_item[key1]
             flattened_data.append(flattened_item)
     return flattened_data
-
-
-def extractHrefParameter(url = ''):
-    # check if the url have redirect parameter
-    if 'r=https' in url:
-        parsed_url = urlparse(url)
-        query_params = parse_qs(parsed_url.query)
-        print('query_params', query_params)
-        r_parameter_value = query_params.get('r', [])[0]
-        decoded_r_value = unquote(r_parameter_value)
-        return decoded_r_value
-    else:
-        return url
 
 def getProductCardListDetail(driver):
     product_list_detail = []
@@ -237,7 +204,7 @@ def saveDataToCSV(array=[], keyword='', status='', optionalText=''):
 
 def storingLoggingAs(status='', text=''):
     current_date_time = datetime.now()
-    formatted_date_time = current_date_time.strftime("%Y-%m-%d")
+    formatted_date_time = current_date_time.strftime("%Y%m%d")
 
     level_logging = {
         'info': logging.INFO,

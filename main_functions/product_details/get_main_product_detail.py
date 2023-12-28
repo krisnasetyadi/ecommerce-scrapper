@@ -50,7 +50,6 @@ def getProductDetail(driver, product_card_item):
     
     # UPDATE-SELLER-SECTION #
     PRODUCT_DETAIL.update(SELLER_DETAIL)
-    print('product detail collected')
 
     storingLoggingAs('info', 'seller detail collected')
 
@@ -65,9 +64,6 @@ def getProductDetail(driver, product_card_item):
 
     # UPDATE-REVIEW_DETAIL-SECTION #
     storingLoggingAs('info', f'review detail collected')
-
-    # print_message(f'REVIEW_DETAIL {REVIEW_DETAIL}', 'info', True)
-    print_message(f'PRODUCT_DETAIL_SECTION {PRODUCT_DETAIL}', 'info', True )
 
     PRODUCT_DETAIL_RESULT = {}
     if REVIEW_DETAIL is not None and len(REVIEW_DETAIL) > 0:

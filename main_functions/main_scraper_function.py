@@ -11,7 +11,7 @@ import undetected_chromedriver as uc
 from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
 # F U N C T I O N S
-from utils.helpers import print_message, scrollFromToptoBottom, getProductCardListDetail, storingLoggingAs, saveDataToCSV
+from utils.helpers import print_message, scrollFromToptoBottom, getProductCardListDetail, storingLoggingAs, saveDataToCSV, playSoundWithStatus
 from utils.product_list_helpers import openNewTabWindow, getTotalPagination
 from config.config import BASE_SEARCH_URL_PARAMETER, PROXY_SERVER, KEYWORD_CATEGORY
 
@@ -48,32 +48,48 @@ def eCommerceScrapper(urls = []):
            
             time.sleep(30)
             print('running without driver error. Start scrolling to footer...')
-            [scrolled] = scrollFromToptoBottom(driver, 'footer-first', False, False, 10, 12)
+            [scrolled] = scrollFromToptoBottom(driver, False, 10)
             
             get_total_pagination_of_product_list = getTotalPagination(driver)
             print('scrolled to bottom:', scrolled, 'get_total_pagination_of_product_list', get_total_pagination_of_product_list)
-            item_each_page = driver.find_elements(By.XPATH, '//div[@class="Bm3ON"]')
-            total_item_per_page = len(item_each_page)
             
-            item_counter_page = 0
-            product_card_list_detail = getProductCardListDetail(driver)
-           
-            print('TOTAL URL HAS SAME LENGTH', f'URL: {len(product_card_list_detail)}', f'TOTAL ITEM: {total_item_per_page}' )
-            storingLoggingAs('info', f'TOTAL URL HAS SAME LENGTH __ URL: {len(product_card_list_detail)}, __ TOTAL ITEM: {total_item_per_page}')
-            if len(product_card_list_detail) == total_item_per_page:
-                for product_card_index, product_card_item in enumerate(product_card_list_detail):
-                        time.sleep(10)
-                        print(f'product_card_index {product_card_index}--{product_card_item["url"]}')
-                        storingLoggingAs('info', f'processing {product_card_index} of {len(product_card_list_detail)} url. opening new tab...')
-                    
-                        openNewTabWindow(driver, product_card_item, LIST_OF_PRODUCT, KEYWORD_CATEGORY, product_card_index, total_item_per_page)
-                        print('open new tab succesfully executed')
-                        item_counter_page += 1
-                        time.sleep(10)   
-                        print('done sleep for 10 seconds')
+            current_pagination = 0
+            while current_pagination < int(get_total_pagination_of_product_list):
+                captcha = driver.find_element(By.XPATH, '//div[id="baxia-punish"]') if driver.find_elements(By.XPATH, '//div[id="baxia-punish"]') else None
+                                
+                if captcha is not None:
+                    storingLoggingAs('warning','captcha detected. need human interact immidiately...')
+                    playSoundWithStatus('error', 3)
+                    time.sleep(30)
+                item_each_page = driver.find_elements(By.XPATH, '//div[@class="Bm3ON"]')
+                total_item_per_page = len(item_each_page)
+                
+                item_counter_page = 0
+                product_card_list_detail = getProductCardListDetail(driver)
+            
+                print('TOTAL URL HAS SAME LENGTH', f'URL: {len(product_card_list_detail)}', f'TOTAL ITEM: {total_item_per_page}' )
+                storingLoggingAs('info', f'TOTAL URL HAS SAME LENGTH __ URL: {len(product_card_list_detail)}, __ TOTAL ITEM: {total_item_per_page}')
+                if len(product_card_list_detail) == total_item_per_page:
+                    for product_card_index, product_card_item in enumerate(product_card_list_detail):
+                            time.sleep(10)
+                            print(f'product_card_index {product_card_index}--{product_card_item["url"]}')
+                            storingLoggingAs('info', f'processing {product_card_index} of {len(product_card_list_detail)} url. opening new tab...')
+                        
+                            openNewTabWindow(driver, product_card_item, LIST_OF_PRODUCT, KEYWORD_CATEGORY, product_card_index, total_item_per_page)
+                            print('open new tab succesfully executed')
+                            item_counter_page += 1
+                            time.sleep(10)   
+                            print('done sleep for 10 seconds')
 
-                if len(LIST_OF_PRODUCT) > 0:
-                    saveDataToCSV(LIST_OF_PRODUCT, KEYWORD_CATEGORY, 'success')
+                    if len(LIST_OF_PRODUCT) > 0:
+                        saveDataToCSV(LIST_OF_PRODUCT, KEYWORD_CATEGORY, 'success')
+
+                        next_pagination_button_element = driver.find_element(By.CSS_SELECTOR,  '#root > div > div.ant-row.FrEdP > div:nth-child(1) > div > div.ant-col.ant-col-20.ant-col-push-4.Jv5R8 > div.b7FXJ > div > ul > li.ant-pagination-next.ant-pagination-disabled > button')
+                        next_element_is_disabled = next_pagination_button_element.get_attribute('disabled')
+                        if not next_element_is_disabled or next_element_is_disabled is None:
+                            next_pagination_button_element.click()     
+                            current_pagination += 1
+                            storingLoggingAs('info', f'current pagination {current_pagination}. current index {product_card_index}')
         except WebDriverException as e:
             print('WebDriverException', e)
             if "ERR_HTTP2_PROTOCOL_ERROR" in str(e):

@@ -26,7 +26,6 @@ def getReviewDetail(driver):
         if len(current_rows_of_reviewers) > 0:
             review_list = []
             navigation_controller = detail_soup.find('div', class_='next-pagination-pages') if detail_soup.find('div', class_='next-pagination-pages') else None
-            print('navigation_controller', navigation_controller)
 
             if navigation_controller is not None:
                 # has pagination
@@ -35,10 +34,9 @@ def getReviewDetail(driver):
                 time.sleep(10)
                 nav_button_element = div_button_container.find_elements(By.TAG_NAME, 'button')
 
-                print('len(nav_button_element), len test', len(nav_button_element))
                 storingLoggingAs('info', f'MAX_BUTTON_PER_NAV: {MAX_BUTTON_PER_NAV} -- len NAV_BUTTON_ELEMENT {len(nav_button_element)}')
                 get_last_pagination_button = nav_button_element[MAX_BUTTON_PER_NAV - 2].text if len(nav_button_element) == MAX_BUTTON_PER_NAV  else nav_button_element[len(nav_button_element) - 2].text
-                print('get_last_pagination_button', get_last_pagination_button)
+
                 storingLoggingAs('info', f'total pagination: {int(get_last_pagination_button) if get_last_pagination_button else 0}')
             
                 for i in range(int(get_last_pagination_button)):
@@ -98,7 +96,15 @@ def getReviewDetail(driver):
                             try:
                                 next_element.click()
                                 print('clicked and scrolling in 5 seconds for 4 times')
-                                scrollFromToptoBottom(driver, '', False, False, 5, 4)
+                                # condition find_elements instead find_element, cause dind_elements return empty array but find_element raise exeption
+                                captcha = driver.find_element(By.XPATH, '//div[id="baxia-punish"]') if driver.find_elements(By.XPATH, '//div[id="baxia-punish"]') else None
+                                
+                                if captcha is not None:
+                                    storingLoggingAs('warning','captcha detected. need human interact immidiately...')
+                                    playSoundWithStatus('error', 3)
+                                    time.sleep(30)
+
+                                scrollFromToptoBottom(driver, False, 5, 4)
                                 storingLoggingAs('info','next button clicked.')
 
                                 # Fetch the new set of current_rows_of_reviewers

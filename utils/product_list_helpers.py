@@ -12,10 +12,10 @@ def openNewTabWindow(driver, product_card_item, listOfProduct, keyword, index_it
     driver.execute_script("window.open('', '_blank');")
     print('processing_opening_new_tab')
     driver.switch_to.window(driver.window_handles[-1])
-    storingLoggingAs('info', f'opening url: {product_card_item["url"]}')
+    storingLoggingAs('info', f'opening new tab with url: {product_card_item["url"]}')
     driver.get(product_card_item["url"])
 
-    [scrolled] = scrollFromToptoBottom(driver, '', False, False, 10, 12)
+    [scrolled] = scrollFromToptoBottom(driver, False, 10)
     storingLoggingAs('info', f'scrolled finished: {scrolled}. trying to process and collect product detail')
 
     try:
@@ -24,7 +24,6 @@ def openNewTabWindow(driver, product_card_item, listOfProduct, keyword, index_it
         time.sleep(30)
         saveDataToCSV(listOfProduct, keyword, 'success_each_item', 'each_product')
         storingLoggingAs('info', f'successfully saved in each products folder {index_item} of {total_item}')
-       
         
     except WebDriverException as e:
           playSoundWithStatus('error', 2)
