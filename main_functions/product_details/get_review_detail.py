@@ -9,6 +9,12 @@ from utils.helpers import storingLoggingAs, scrollFromToptoBottom
 def getReviewDetail(driver):
     storingLoggingAs('info', f'processing review section . . . start in 30 seconds .')
     print('processing review section . . . start in 30 seconds .')
+    captcha = driver.find_element(By.XPATH, '//div[id="baxia-punish"]') if driver.find_elements(By.XPATH, '//div[id="baxia-punish"]') else None
+                                
+    if captcha is not None:
+        storingLoggingAs('warning','captcha detected. need human interact immidiately...')
+        playSoundWithStatus('error', 3)
+        time.sleep(30)
 
     time.sleep(30)
     detail_content = driver.page_source
@@ -81,6 +87,12 @@ def getReviewDetail(driver):
                     
                     if with_pagination_review_count_per_page == total_rows_per_page:
                         print('processing pagination')
+                        captcha = driver.find_element(By.XPATH, '//div[id="baxia-punish"]') if driver.find_elements(By.XPATH, '//div[id="baxia-punish"]') else None
+                                
+                        if captcha is not None:
+                            storingLoggingAs('warning','captcha detected. need human interact immidiately...')
+                            playSoundWithStatus('error', 3)
+                            time.sleep(30)
                         storingLoggingAs('info', 'processing reviews with pagination...')
                         
                         time.sleep(2)

@@ -153,8 +153,9 @@ def getProductCardListDetail(driver):
 
 
 def saveDataToCSV(array=[], keyword='', status='', optionalText=''):
+    # %H%M%S
     current_date_time = datetime.now()
-    formatted_date_time = current_date_time.strftime("%Y%m%d%H%M%S")
+    formatted_date_time = current_date_time.strftime("%Y%m%d")
     # storingLoggingAs('info', f'array_before_save_to_csv {array}')
     stored_data = []
 
@@ -216,8 +217,9 @@ def storingLoggingAs(status='', text=''):
     os.makedirs(logs_folder, exist_ok=True)
     
     log_file_path = os.path.join(logs_folder, f'scrapper_{formatted_date_time}.log')
-
+    # get logger checks if there are already handlers attacthed tothe logger
     logger = logging.getLogger('logger') 
+    # should move logging setup outside or prevent with condition
     if not logger.handlers:
         logger.setLevel(logging.DEBUG)
 

@@ -16,6 +16,12 @@ def openNewTabWindow(driver, product_card_item, listOfProduct, keyword, index_it
     driver.get(product_card_item["url"])
 
     [scrolled] = scrollFromToptoBottom(driver, False, 10)
+    captcha = driver.find_element(By.XPATH, '//div[id="baxia-punish"]') if driver.find_elements(By.XPATH, '//div[id="baxia-punish"]') else None
+                                
+    if captcha is not None:
+        storingLoggingAs('warning','captcha detected. need human interact immidiately...')
+        playSoundWithStatus('error', 3)
+        time.sleep(30)
     storingLoggingAs('info', f'scrolled finished: {scrolled}. trying to process and collect product detail')
 
     try:

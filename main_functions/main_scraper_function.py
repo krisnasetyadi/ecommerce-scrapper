@@ -83,8 +83,9 @@ def eCommerceScrapper(urls = []):
 
                     if len(LIST_OF_PRODUCT) > 0:
                         saveDataToCSV(LIST_OF_PRODUCT, KEYWORD_CATEGORY, 'success')
-
-                        next_pagination_button_element = driver.find_element(By.CSS_SELECTOR,  '#root > div > div.ant-row.FrEdP > div:nth-child(1) > div > div.ant-col.ant-col-20.ant-col-push-4.Jv5R8 > div.b7FXJ > div > ul > li.ant-pagination-next.ant-pagination-disabled > button')
+                        #root > div > div.ant-row.FrEdP > div:nth-child(1) > div > div.ant-col.ant-col-20.ant-col-push-4.Jv5R8 > div.b7FXJ > div > ul > li.ant-pagination-next.ant-pagination-disabled > button
+                        #root > div > div.ant-row.FrEdP > div:nth-child(1) > div > div.ant-col.ant-col-20.ant-col-push-4.Jv5R8 > div.b7FXJ > div > ul > li.ant-pagination-next > button
+                        next_pagination_button_element = driver.find_element(By.CSS_SELECTOR, '#root > div > div.ant-row.FrEdP > div:nth-child(1) > div > div.ant-col.ant-col-20.ant-col-push-4.Jv5R8 > div.b7FXJ > div > ul > li.ant-pagination-next > button')
                         next_element_is_disabled = next_pagination_button_element.get_attribute('disabled')
                         if not next_element_is_disabled or next_element_is_disabled is None:
                             next_pagination_button_element.click()     
